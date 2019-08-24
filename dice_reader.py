@@ -6,12 +6,13 @@ import random
 import math
 import pygame
 import sys
+import RPi.GPIO as GPIO
 from pygame.locals import *
 from utilities import *
 from cv2_functions import *
 from business_hours import *
 last_message_time = 0
-
+demo_mode = False
 x = None
 y = None
 num_dice = 3
@@ -41,6 +42,11 @@ WHITE=(200,200,200)
 NAVY=(50,50,100)
 RED=(255,0,0)
 ORANGE=(255,147,53)
+#demo toggle pin
+pin = 18
+GPIO.setwarnings(False)
+GPIO.setmode(GPIO.BCM)
+GPIO.setup(pin, GPIO.OUT)
 try:
     while True:
         if counter >= 90000:                # set maximum sizes for variables and lists to save memory.
@@ -57,9 +63,6 @@ try:
         frame = pygame.surfarray.make_surface(frame)
         screen.fill(TEAL)#
         screen.blit(frame, (cam_offset,0))
-        
-        
-
         for keypoint in keypoints:
             pygame.draw.circle(screen,NAVY,(int(keypoint.pt[0]+cam_offset),int(keypoint.pt[1])), 7)
         reading = len(keypoints)                                # 'reading' counts the number of keypoints (pips).
@@ -71,10 +74,12 @@ try:
         # if the most recent valid reading has changed, and it's something other than zero, then proceed.
         
 
+         
         if display[-1] > 1 and display[-1] == len(keypoints):
             if time.time()-last_message_time > 2: #don't spam digits
+                demo_mode = GPIO.input(pin)                
                 msg = ["THE RANDOMIZER"]
-                if not class_now():
+                if not class_now() or demo_mode:
                     if(ser.isOpen()): #Tell the arduino to start the motor
                         ser.write("1")
                     msg.extend(get_info_lines(np.floor(time.time()/15)%4))
@@ -119,6 +124,14 @@ try:
                 else:
                     msg.extend(get_info_lines(99)) #99 is the code for closed message
                     msg.extend(get_stat_lines(lastDigits))
+#                try:
+#                    myData = ser.readline()
+#                    if myData == "1":
+#                        demo_mode = True
+#                    else:
+#                        demo_mode = False
+#                except:
+#                    print "error reading serial data from arduino"
         
         counter += 1
         label = []
@@ -179,6 +192,7 @@ try:
         for event in pygame.event.get():
           if event.type == pygame.QUIT:
               sys.exit(0)
+
 except KeyboardInterrupt,SystemExit:
     pygame.quit()
     cv2.destroyAllWindows()

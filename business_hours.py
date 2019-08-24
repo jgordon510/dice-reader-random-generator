@@ -12,5 +12,5 @@ def class_now():
     elif today == 5 or today == 6:  #SaSu
         if now.hour >= 10 and now.hour <= 18:
             class_now = True
-    #return False
+    #return True
     return class_now
