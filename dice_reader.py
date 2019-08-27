@@ -174,7 +174,7 @@ try:
                 spacing = 55
             screen.blit(label[line],(10,offset_y+spacing*line))
         label = []
-        if not class_now():
+        if not class_now() or demo_mode:
             for roll in rolls:
                 label.append(dice_font.render(str(roll), True, NAVY))
             for line in range(len(label)):
